@@ -1,5 +1,6 @@
 package com.ribeiro.murilo.cursomc;
 
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,13 +13,20 @@ import com.ribeiro.murilo.cursomc.domains.Cidade;
 import com.ribeiro.murilo.cursomc.domains.Cliente;
 import com.ribeiro.murilo.cursomc.domains.Endereco;
 import com.ribeiro.murilo.cursomc.domains.Estado;
+import com.ribeiro.murilo.cursomc.domains.Pagamento;
+import com.ribeiro.murilo.cursomc.domains.PagamentoComBoleto;
+import com.ribeiro.murilo.cursomc.domains.PagamentoComCartao;
+import com.ribeiro.murilo.cursomc.domains.Pedido;
 import com.ribeiro.murilo.cursomc.domains.Produto;
+import com.ribeiro.murilo.cursomc.domains.enuns.EstadoPagamento;
 import com.ribeiro.murilo.cursomc.domains.enuns.TipoCliente;
 import com.ribeiro.murilo.cursomc.repositories.CategoriaRepository;
 import com.ribeiro.murilo.cursomc.repositories.CidadeRepository;
 import com.ribeiro.murilo.cursomc.repositories.ClienteRepository;
 import com.ribeiro.murilo.cursomc.repositories.EnderecoRepository;
 import com.ribeiro.murilo.cursomc.repositories.EstadoRepository;
+import com.ribeiro.murilo.cursomc.repositories.PagamentoRepository;
+import com.ribeiro.murilo.cursomc.repositories.PedidoRepository;
 import com.ribeiro.murilo.cursomc.repositories.ProdutoRepository;
 
 @SpringBootApplication
@@ -29,19 +37,25 @@ public class CursomcApplication implements CommandLineRunner {
 
 	@Autowired
 	private ProdutoRepository produtoRepository;
-	
+
 	@Autowired
 	private EstadoRepository estadoRepository;
-	
+
 	@Autowired
 	private CidadeRepository cidadeRepository;
-	
+
 	@Autowired
 	private ClienteRepository clienteRepository;
-	
+
 	@Autowired
 	private EnderecoRepository enderecoRepository;
 	
+	@Autowired
+	private PedidoRepository pedidoRepository;
+	
+	@Autowired
+	private PagamentoRepository pagamentoRepository;
+
 	public static void main(String[] args) {
 		SpringApplication.run(CursomcApplication.class, args);
 	}
@@ -92,6 +106,22 @@ public class CursomcApplication implements CommandLineRunner {
 		// Salvando clientes e enderecos relacionados
 		clienteRepository.saveAll(Arrays.asList(cli1));
 		enderecoRepository.saveAll(Arrays.asList(e1, e2));
+		
+		SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy hh:mm");
+		
+		Pedido ped1 = new Pedido(null, sdf.parse("30/09/2021 10:32"), cli1, e1);
+		Pedido ped2 = new Pedido(null, sdf.parse("10/10/2021 19:35"), cli1, e2);
+		
+		Pagamento pagto1 = new PagamentoComCartao(null, EstadoPagamento.QUITADO, ped1, 6);
+		ped1.setPagamento(pagto1);
+		
+		Pagamento pagto2 = new PagamentoComBoleto(null, EstadoPagamento.PENDENTE, ped2, sdf.parse("20/10/2021 00:00"), null);
+		ped2.setPagamento(pagto2);
+		
+		cli1.getPedidos().addAll(Arrays.asList(ped1, ped2));
+		
+		pedidoRepository.saveAll(Arrays.asList(ped1, ped2));
+		pagamentoRepository.saveAll(Arrays.asList(pagto1, pagto2));
 	}
 
 }
